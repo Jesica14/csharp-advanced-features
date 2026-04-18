@@ -18,9 +18,3 @@ Services → One class per constraint
 | `where T : new()` | `Factory` | Allows calling `new T()` without knowing the concrete type |
 | `where T : IValidator` | `Validator` | Guarantees `IsValid()` and `ValidationError()` on any entity |
 | `where T : struct` | `NullableHelper` | `T?` is always `Nullable<T>`, so `.HasValue` is safe |
-
-## Run
-
-```bash
-dotnet run
-```

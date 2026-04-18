@@ -7,6 +7,8 @@ namespace Generics.Services;
 public class Repository<T> where T : class
 {
     private readonly List<T> _store = [];
+
     public void Add(T item) => _store.Add(item);
+    
     public IEnumerable<T> GetAll() => _store.AsReadOnly();
 }
