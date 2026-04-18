@@ -11,6 +11,7 @@ public class InMemoryRepository<T> : IRepository<T> where T : BaseEntity
     {
         _data.Add(entity);
     }
+    
     public T? GetById(int id)
     {
         return _data.FirstOrDefault(x => x.Id == id);
