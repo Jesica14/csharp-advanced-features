@@ -6,4 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>StringBuilderDemo</RootNamespace>
   </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
+  </ItemGroup>
 </Project>
