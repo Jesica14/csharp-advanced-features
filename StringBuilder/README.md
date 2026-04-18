@@ -38,11 +38,7 @@ string result = sb.ToString();
 ```
 
 ## Benchmark results
+<img src="image.png" width="900" />
 
-Running both approaches over 10,000 orders on the same machine:
+Besides time, the most important metric is memory allocations, string concatenation allocated **3,850 MB** vs **1.61 MB** with `StringBuilder`, those extra allocations put constant pressure on the GC, which represents a real cost in production.
 
-| Approach | Time |
-|---|---|
-| String concatenation (+=) | ~960 ms |
-| `StringBuilder` | ~4 ms |
-| `StringBuilder` with capacity | ~3 ms |

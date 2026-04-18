@@ -1,59 +1,44 @@
-using System.Diagnostics;
+using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Running;
 using System.Text;
 
 internal class Program
 {
     private static void Main(string[] args)
     {
-        // Data
-        var orders = Enumerable.Range(1, 10_000)
-            .Select(i => new { Id = i, Customer = $"Customer_{i}", Amount = i * 10m, IsPaid = i % 2 == 0 })
-            .ToList();
+        BenchmarkRunner.Run<StringBenchmark>();
+    }
+}
 
-        var sw = new Stopwatch();
+[MemoryDiagnoser]
+public class StringBenchmark
+{
+    private const int Iterations = 10_000;
 
-        // String concatenation
-        sw.Start();
+    [Benchmark(Baseline = true)]
+    public string StringConcatenation()
+    {
+        string result = "";
+        for (int i = 0; i < Iterations; i++)
+            result += $"Order #{i} | Customer_{i} | {i * 10m:C}\n";
+        return result;
+    }
 
-        string report = string.Empty;
-        foreach (var o in orders)
-        {
-            report += $"Order #{o.Id} | {o.Customer} | {o.Amount:C} | Paid={o.IsPaid}\n";
-            Console.WriteLine(report);
-        }
-
-        sw.Stop();
-
-        Console.WriteLine($"Concat: {sw.ElapsedMilliseconds} ms");
-
-
-        // StringBuilder
-        sw.Restart();
-
+    [Benchmark]
+    public string StringBuilderBasic()
+    {
         var sb = new StringBuilder();
-        foreach (var o in orders)
-        {
-            sb.AppendLine($"Order #{o.Id} | {o.Customer} | {o.Amount:C} | Paid={o.IsPaid}");
-        }
+        for (int i = 0; i < Iterations; i++)
+            sb.AppendLine($"Order #{i} | Customer_{i} | {i * 10m:C}");
+        return sb.ToString();
+    }
 
-        var result = sb.ToString();
-
-        sw.Stop();
-        Console.WriteLine($"StringBuilder: {sw.ElapsedMilliseconds} ms");
-
-
-        // StringBuilder with capacity
-        sw.Restart();
-
-        var sb2 = new StringBuilder(orders.Count * 60);
-        foreach (var o in orders)
-        {
-            sb2.AppendLine($"Order #{o.Id} | {o.Customer} | {o.Amount:C} | Paid={o.IsPaid}");
-        }
-
-        sb2.ToString();
-
-        sw.Stop();
-        Console.WriteLine($"StringBuilder (capacity): {sw.ElapsedMilliseconds} ms");
+    [Benchmark]
+    public string StringBuilderWithCapacity()
+    {
+        var sb = new StringBuilder(capacity: Iterations * 60);
+        for (int i = 0; i < Iterations; i++)
+            sb.AppendLine($"Order #{i} | Customer_{i} | {i * 10m:C}");
+        return sb.ToString();
     }
 }
