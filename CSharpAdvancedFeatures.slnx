@@ -2,4 +2,5 @@
   <Project Path="Generics/Generics.csproj" />
   <Project Path="Delegates/Delegates.csproj" />
   <Project Path="StringBuilder/StringBuilder.csproj" />
+  <Project Path="AsyncAwait/AsyncAwait.csproj" />
 </Solution>
