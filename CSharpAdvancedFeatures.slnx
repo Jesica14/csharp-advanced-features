@@ -4,4 +4,5 @@
   <Project Path="StringBuilder/StringBuilder.csproj" />
   <Project Path="AsyncAwait/AsyncAwait.csproj" />
   <Project Path="EntityFramework/EntityFramework.csproj" />
+  <project Path="UnitTesting/UnitTesting.csproj" />
 </Solution>
