@@ -1,9 +1,12 @@
-using HotelEF.Data;
-using HotelEF.Entities;
+using System.Runtime.CompilerServices;
+using EntityFramework.Data;
+using EntityFramework.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-namespace HotelEF.Services;
+[assembly: InternalsVisibleTo("UnitTesting")]
+
+namespace EntityFramework.Services;
 
 public class ReservationService
 {
@@ -30,8 +33,17 @@ public class ReservationService
             .ToListAsync();
     }
 
-    public async Task<Reservation> CreateReservationAsync(int guestId, int roomId, DateTime checkIn, DateTime checkOut)
+    public async Task<Reservation> CreateReservationAsync(
+        int guestId,
+        int roomId,
+        DateTime checkIn,
+        DateTime checkOut)
     {
+        if (!IsValidDateRange(checkIn, checkOut))
+        {
+            throw new ArgumentException("Invalid date range.");
+        }
+
         var room = await _context.Rooms.FindAsync(roomId)
             ?? throw new InvalidOperationException("Room not found.");
 
@@ -41,14 +53,25 @@ public class ReservationService
             throw new InvalidOperationException($"Room {room.Number} is not available.");
         }
 
-        var nights = CalculateTotalPrice(checkIn, checkOut, room.PricePerNight);
+        var hasConflict = await _context.Reservations.AnyAsync(res =>
+            res.RoomId == roomId &&
+            res.CheckIn < checkOut &&
+            res.CheckOut > checkIn);
+
+        if (hasConflict)
+        {
+            throw new InvalidOperationException("Room is already booked for selected dates.");
+        }
+
+        var total = CalculateTotalPrice(checkIn, checkOut, room.PricePerNight);
+
         var reservation = new Reservation
         {
             GuestId = guestId,
             RoomId = roomId,
             CheckIn = checkIn,
             CheckOut = checkOut,
-            TotalPrice = nights
+            TotalPrice = total
         };
 
         try
@@ -80,7 +103,12 @@ public class ReservationService
     internal decimal CalculateTotalPrice(DateTime checkIn, DateTime checkOut, decimal pricePerNight)
     {
         var nights = (checkOut - checkIn).Days;
-        if (nights <= 0) throw new ArgumentException("CheckOut must be after CheckIn.");
+
+        if (nights <= 0)
+        {
+            throw new ArgumentException("CheckOut must be after CheckIn.");
+        }
+
         return nights * pricePerNight;
     }
 

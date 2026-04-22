@@ -1,7 +1,7 @@
-using HotelEF.Entities;
+using EntityFramework.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace HotelEF.Data;
+namespace EntityFramework.Data;
 
 public class HotelDbContext : DbContext
 {

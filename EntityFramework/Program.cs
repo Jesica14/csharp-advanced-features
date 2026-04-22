@@ -1,5 +1,5 @@
-using HotelEF.Data;
-using HotelEF.Services;
+using EntityFramework.Data;
+using EntityFramework.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
