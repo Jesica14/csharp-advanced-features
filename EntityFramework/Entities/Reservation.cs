@@ -1,4 +1,4 @@
-namespace HotelEF.Entities;
+namespace EntityFramework.Entities;
 
 // Fluent API in HotelDbContext
 public class Reservation

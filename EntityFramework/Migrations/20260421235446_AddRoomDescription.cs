@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace HotelEF.Migrations
+namespace EntityFramework.Migrations
 {
     /// <inheritdoc />
     public partial class AddRoomDescription : Migration

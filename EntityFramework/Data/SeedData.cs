@@ -1,7 +1,7 @@
-using HotelEF.Data;
-using HotelEF.Entities;
+using EntityFramework.Data;
+using EntityFramework.Entities;
 
-namespace HotelEF.Data;
+namespace EntityFramework.Data;
 
 public static class SeedData
 {

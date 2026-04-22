@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace HotelEF.Entities;
+namespace EntityFramework.Entities;
 
 public class Room
 {
