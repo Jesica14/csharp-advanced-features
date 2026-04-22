@@ -16,69 +16,74 @@ public class ReservationService
         _logger = logger;
     }
 
-    public async Task RunDemoAsync()
+    public async Task<List<Room>> GetAvailableRoomsAsync(DateTime checkIn, DateTime checkOut)
     {
-        var checkIn = DateTime.Today.AddDays(6);
-        var checkOut = DateTime.Today.AddDays(9);
+        _logger.LogInformation("Fetching available rooms from {CheckIn} to {CheckOut}", checkIn, checkOut);
 
-        // Read-only query (no tracking)
-        _logger.LogInformation(
-            "Fetching available rooms from {CheckIn} to {CheckOut}",
-            checkIn,
-            checkOut);
-
-        var rooms = await _context.Rooms
+        return await _context.Rooms
             .AsNoTracking()
-            .Where(r => r.IsAvailable &&
-                        !_context.Reservations.Any(res =>
-                            res.RoomId == r.Id &&
-                            res.CheckIn < checkOut &&
-                            res.CheckOut > checkIn))
+            .Where(r => r.IsAvailable && !_context.Reservations.Any(res =>
+                res.RoomId == r.Id &&
+                res.CheckIn < checkOut &&
+                res.CheckOut > checkIn))
             .OrderBy(r => r.PricePerNight)
             .ToListAsync();
+    }
 
-        foreach (var room in rooms)
+    public async Task<Reservation> CreateReservationAsync(int guestId, int roomId, DateTime checkIn, DateTime checkOut)
+    {
+        var room = await _context.Rooms.FindAsync(roomId)
+            ?? throw new InvalidOperationException("Room not found.");
+
+        if (!room.IsAvailable)
         {
-            Console.WriteLine($"  Room {room.Number} | {room.Type} | {room.PricePerNight:C}/night");
+            _logger.LogWarning("Room {Room} is not available", room.Number);
+            throw new InvalidOperationException($"Room {room.Number} is not available.");
         }
 
-        // Create reservation (tracking required)
-        var roomToBook = await _context.Rooms.FirstAsync(r => r.Number == "104");
-        var guest = await _context.Guests.FirstAsync(g => g.Email == "luis@hotel.com");
-
-        if (!roomToBook.IsAvailable)
-        {
-            _logger.LogWarning("Room {Room} is not available", roomToBook.Number);
-            return;
-        }
-
+        var nights = CalculateTotalPrice(checkIn, checkOut, room.PricePerNight);
         var reservation = new Reservation
         {
-            RoomId = roomToBook.Id,
-            GuestId = guest.Id,
-            CheckIn = DateTime.Today.AddDays(7),
-            CheckOut = DateTime.Today.AddDays(9),
-            Notes = "Created from demo",
-            TotalPrice = 1700
+            GuestId = guestId,
+            RoomId = roomId,
+            CheckIn = checkIn,
+            CheckOut = checkOut,
+            TotalPrice = nights
         };
 
         try
         {
-            _logger.LogInformation(
-                "Creating reservation for {Guest} in room {Room}",
-                guest.FullName,
-                roomToBook.Number);
-
             _context.Reservations.Add(reservation);
             await _context.SaveChangesAsync();
 
-            Console.WriteLine(
-                $"  Created reservation #{reservation.Id} | Total: {reservation.TotalPrice:C}");
+            _logger.LogInformation("Reservation #{Id} created for guest {GuestId}", reservation.Id, guestId);
+            return reservation;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating reservation");
+            _logger.LogError(ex, "Error creating reservation for guest {GuestId}", guestId);
             throw;
         }
     }
+
+    public async Task CancelReservationAsync(int reservationId)
+    {
+        var reservation = await _context.Reservations.FindAsync(reservationId)
+            ?? throw new InvalidOperationException("Reservation not found.");
+
+        _context.Reservations.Remove(reservation);
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Reservation #{Id} cancelled", reservationId);
+    }
+
+    internal decimal CalculateTotalPrice(DateTime checkIn, DateTime checkOut, decimal pricePerNight)
+    {
+        var nights = (checkOut - checkIn).Days;
+        if (nights <= 0) throw new ArgumentException("CheckOut must be after CheckIn.");
+        return nights * pricePerNight;
+    }
+
+    private static bool IsValidDateRange(DateTime checkIn, DateTime checkOut) =>
+        checkOut > checkIn && checkIn >= DateTime.Today;
 }
